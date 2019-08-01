@@ -4,7 +4,7 @@ A class that uses the Spotipy API to make Spotify API calls easier to use.
 Only supports playing of track, pause track, goto next track, previous track, turn repeat on/off right now... more to come later
 
 
-###Why use this?
+### Why use this?
 It`s a little smarter.... in that it offers a nice search feature for YOUR library (might add feature to search other tracks that are not in user library)
 
 An important thing to note is that the search takes your search input and compares that to your library 
