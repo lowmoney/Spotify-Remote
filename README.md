@@ -1,11 +1,13 @@
 # Spotify Remote
 
-A class that uses the Spotipy API to make Spotify API calls easier to use
-Only supports playing of track, pause track, goto next track, previous track, turn repeat on/off
-Planning on adding support for playlists
+A class that uses the Spotipy API to make Spotify API calls easier to use.
+Only supports playing of track, pause track, goto next track, previous track, turn repeat on/off right now... more to come later
 
-Why use this?
+
+###Why use this?
 It`s a little smarter.... in that it offers a nice search feature for YOUR library (might add feature to search other tracks that are not in user library)
+
+An important thing to note is that the search takes your search input and compares that to your library 
 
 For example lets say we want to play the song 'Drive Safe' by Rich Brian and we assume that this album or track is in the user`s library then we call the command
 ```
@@ -35,12 +37,13 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 * To run you`ll need to have spotipy and fuzzywuzzy installed
-* fuzzywuzzy uses optional python-Levenshtein. They recomend the use of it as it speeds up string         mathcing 
+* fuzzywuzzy uses optional python-Levenshtein. They recomend the use of it as it speeds up string mathcing 
 
-Use pip to install these two
+Use pip to install these two(three)
 ```
 pip3 install spotipy
 pip3 install fuzzywuzzy
+pip3 install python-Levenshtein (optional)
 ```
 
 ### Installing
@@ -71,7 +74,11 @@ I`ll give an example
 CLIENT_ID = '######'
 CLIENT_SECRET = '######'
 REDIRECT_URI = 'https://example.com/callback/'
-scope = 'user-read-private user-library-read playlist-read-private user-read-playback-state user-modify-playback-state'
+
+# The scope is important, the order on how you put them does not matter what #matters is that it`s there
+scope = 'user-read-private user-library-read playlist-read-private 
+
+user-read-playback-state user-modify-playback-state'
 
 try:
     token = util.prompt_for_user_token(SpotifyId, scope, client_id=CLIENT_ID,client_secret=CLIENT_SECRET,redirect_uri=REDIRECT_URI)
@@ -119,11 +126,23 @@ A list of commands you`ll use
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+Just me right now
+
+## Things that will be added... hopefully
+* Playlist support
+* Make device playback smarter
+    * In that when a user types in 'desktop' it knows to choose the 'DESKTOP-#####' but making sure the pause and skip and last work the same way
+* After playing track skip track since duplicate is added
+    * Spotipy does not support the playback of single track
+* Searching Spotify if the track is not in the User Library
+* General optimzation and making things more readable
+* Incorporating design-by-contract more in functions as this is the design structure
+* Add more comments to give more info
+* Lastly add install from package manager like pip
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
 
