@@ -34,15 +34,15 @@ class remote:
     # Given the name of track
     # Return the location of track in self.user_albums
     # Send a search API request if we can`t find the track from user album
-    def search(self,key,type=None):
+    def search(self,key,type=None,multiple=False):
         location = []
         # If user gives us a type then search Spotify
         if type is not None:
             search = self.spotify_object.search(key, limit=5, type = type )
-            search = search['track']['items']
+            search = search['tracks']['items']
             for items in search:
                 if len(key) > 5:
-                    if fuzz.token_sort_ratio(key,itmes['name']) > 70:
+                    if fuzz.token_sort_ratio(key,items['name']) > 70:
                         location.append(items['name'])
                         location.append(items['uri'])
                         break
@@ -52,7 +52,8 @@ class remote:
                         location.append(items['uri'])
                         break
         # Do a quick search to see if the user has the track in thier library
-        elif type is None:
+        if type is None and multiple is False:
+            print("type is none")
             for x in range(0,len(self.user_albums)):
                 for y in range (0,len(self.user_albums[x][1])):
                     # Add FuzzyWuzzy to make search better
@@ -66,14 +67,29 @@ class remote:
                         if fuzz.ratio(key,self.user_albums[x][1][y][0]) > 50:
                             location.append(x)
                             location.append(y)
-        
-        # If the length of location is zero then user does not have track in library
-        else len(location) == 0:
-            search = self.spotify_object.search(key, limit=5, type = type )
-            search = search['track']['items']
+        # If multiple tracks given
+        if multiple is True:
+            search = self.spotify_object.search(key, limit=5, type = 'track' )
+            search = search['tracks']['items']
             for items in search:
                 if len(key) > 5:
-                    if fuzz.token_sort_ratio(key,itmes['name']) > 70:
+                    if fuzz.token_sort_ratio(key,items['name']) > 70:
+                        location.append(items['name'])
+                        location.append(items['uri'])
+                        break
+                else:
+                    if fuzz.ratio(key,items['name']) > 75:
+                        location.append(items['name'])
+                        location.append(items['uri'])
+                        break
+        # If the length of location is zero then user does not have track in library
+        if len(location) == 0:
+            print("len(location)")
+            search = self.spotify_object.search(key, limit=5, type = 'track' )
+            search = search['tracks']['items']
+            for items in search:
+                if len(key) > 5:
+                    if fuzz.token_sort_ratio(key,items['name']) > 70:
                         location.append(items['name'])
                         location.append(items['uri'])
                         break
@@ -109,27 +125,28 @@ class remote:
     # Given track and location
     # Play track at location
     def play(self,key=None,location=None):
-        # @TODO Add support for playlist and mutliple songs
-        # Added support for multiple songs
-        if isinstance(key,list) and location is not None:
-            uris = []
-            for x in key:
-                uris.append((self.search(x))[1])
-            self.spotify_object.start_playback(uris=uris,device_id=self.findDevice(location))
-        if isinstance(key,list) and location is None:
-            uris = []
-            for x in key:
-                uris.append((self.search(x))[1])
-            self.spotify_object.start_playback(uris = uris)
         # Check some states
         # See if user can even use play method
         if self.user == 'open' or self.user == 'free':
             return 'must have premium'
+        # @TODO Add support for playlist and mutliple songs
+        # Added support for multiple songs
+        elif isinstance(key,list) and location is not None:
+            uris = []
+            for x in key:
+                uris.append((self.search(x,multiple=True))[1])
+            self.spotify_object.start_playback(uris=uris,device_id=self.findDevice(location))
+        elif isinstance(key,list) and location is None:
+            uris = []
+            for x in key:
+                uris.append((self.search(x,multiple=True))[1])
+                print(uris)
+            self.spotify_object.start_playback(uris = uris)
         # If user gives no key and no location then resume playback on current location
         elif key is None and location is None:
             self.spotify_object.start_playback(uris = [((self.spotify_object.currently_playing())['item']['uri']),((self.spotify_object.currently_playing())['item']['uri'])])
             self.next()
-            print("Playing " + (self.spotify_object.currently_playing())['item']['name']) + " at current device")
+            print("Playing " + ((self.spotify_object.currently_playing())['item']['name']) + " at current device")
         # If user gives no location but gives us a key then play given key at current device playback
         elif location is None and key is not None:
             album_location = self.search(str(key))
@@ -149,7 +166,7 @@ class remote:
         elif key is None and location is not None:
             self.spotify_object.start_playback(device_id = self.findDevice(location),uris = [((self.spotify_object.currently_playing())['item']['uri']),((self.spotify_object.currently_playing())['item']['uri'])])
             self.next()
-            print("Playing " + (self.spotify_object.currently_playing())['item']['name']) + " at " + location)
+            print("Playing " + ((self.spotify_object.currently_playing())['item']['name']) + " at " + location)
 
 
     # Pause playback
