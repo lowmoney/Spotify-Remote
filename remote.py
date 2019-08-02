@@ -85,12 +85,14 @@ class remote:
         elif key is None and location is None:
             self.spotify_object.start_playback(uris = [((self.spotify_object.currently_playing())['item']['uri']),((self.spotify_object.currently_playing())['item']['uri'])])
             self.next()
+            print("Playing " + (self.spotify_object.currently_playing())['item']['name']) + " at current device")
         # If user gives no location but gives us a key then play given key at current device playback
         elif location is None and key is not None:
             album_location = self.search(str(key))
             track_id = str(self.user_albums[album_location[0]][1][album_location[1]][1])
             self.spotify_object.start_playback(uris = [track_id,track_id])
             self.next()
+            print("Playing " + (track_id) + " at current device")
         # If user gives key and location then play key at device
         elif key is not None and location is not None:
             album_location = self.search(str(key))
@@ -98,10 +100,13 @@ class remote:
             location = self.findDevice(location)
             self.spotify_object.start_playback(device_id=location,uris=[track_id,track_id])
             self.next()
+            print("Playing " + (self.user_albums[album_location[0]][1][album_location[1]][0]) + " at " + location)
         # If user gives only location then start to play at location
         elif key is None and location is not None:
             self.spotify_object.start_playback(device_id = self.findDevice(location),uris = [((self.spotify_object.currently_playing())['item']['uri']),((self.spotify_object.currently_playing())['item']['uri'])])
             self.next()
+            print("Playing " + (self.spotify_object.currently_playing())['item']['name']) + " at " + location)
+
 
     # Pause playback
     # If given device in normal name like desktop, iphone...
