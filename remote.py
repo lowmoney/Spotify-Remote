@@ -7,7 +7,8 @@ class remote:
         self.user_albums = self.album_maker(spotify_object)
         self.user = (spotify_object.me())['product']
     
-
+    # Given a spotify_object
+    # Return all tracks that the user has with a limit of 50
     def album_maker(self,spotipy_object):
         names = []
         album = []
@@ -20,6 +21,7 @@ class remote:
             album.append((names[x],self.scrape_track(user_spotify_album,x)))
         return album
 
+    # Helper function for album_maker
     def scrape_track(self,user_album,album_num):
         tracks = []
         track_ammount = int(user_album['items'][album_num]['album']['total_tracks'])
@@ -29,6 +31,8 @@ class remote:
         
         return tracks
     
+    # Given the name of track
+    # Return the location of track in self.user_albums
     def search(self,key):
         location = []
         for x in range(0,len(self.user_albums)):
@@ -48,46 +52,30 @@ class remote:
 
         return location
 
-    # Save devices locally so we can look at devices?
-    # Add FuzzyWuzzy to make search easy
-    def devices(self):
-        device = self.spotify_object.devices()
-        devices = []
-
-        for x in range(0, len(device['devices'])):
-            devices.append((device['devices'][x]['name'],device['devices'][x]['id']))
-        return devices
-
+    # Given the name of the device
+    # Return the device ID of given name
     def findDevice(self,device):
-        devices = self.devices()
-        for x in range (0,len(devices)):
-            # Add FuzzyWuzzy to make search easy
-            if fuzz.token_sort_ratio(device,devices[x][0]) > 65:
-                try:
-                    return devices[x][1]
-                except IndexError:
-                    print("Spotify is not opened  on any device")
-            # Safe bet
-            # if device in devices[x][0]:
-            #     try:
-            #         return devices[x][1]
-            #     except IndexError:
-            #         print("Spotify is not opened on any device")
-
-    def activeDevice(self):
         devices = self.spotify_object.devices()
-        for x in range (0,len(devices)):
-            try:
-                if devices['devices'][x]['is_active']:
-                    # This try except might be useless
-                    try:
-                        return devices['devices'][x]['id']
-                    except IndexError:
-                        print("No active devices found or no device has Spotify opened")
-            except IndexError:
-                print("No active devices found or no device has Spotify opened")
+        if len(devices['devices']) > 0:
+            for x in range (0,len(devices)):
+                # Add FuzzyWuzzy to make finding devices easy
+                if fuzz.token_sort_ratio(device,devices['devices'][x]['name']) > 50:
+                    return devices['devices'][x]['id']
+        
+        else:
+            print("No active devices found")
 
-    # Add a better way to choose deivces
+    # Given no arguments
+    # Resume playback
+    #
+    # Given a track name
+    # Play track at current_playback
+    #
+    # Given location
+    # Play current track at location
+    #
+    # Given track and location
+    # Play track at location
     def play(self,key=None,location=None):
         # Check some states
         # See if user can even use play method
@@ -96,48 +84,71 @@ class remote:
         # If user gives no key and no location then resume playback on current location
         elif key is None and location is None:
             self.spotify_object.start_playback(uris = [((self.spotify_object.currently_playing())['item']['uri']),((self.spotify_object.currently_playing())['item']['uri'])])
-        # If user gives no location play given key at current device playback
+            self.next()
+        # If user gives no location but gives us a key then play given key at current device playback
         elif location is None and key is not None:
             album_location = self.search(str(key))
             track_id = str(self.user_albums[album_location[0]][1][album_location[1]][1])
             self.spotify_object.start_playback(uris = [track_id,track_id])
+            self.next()
         # If user gives key and location then play key at device
         elif key is not None and location is not None:
             album_location = self.search(str(key))
             track_id = self.user_albums[album_location[0]][1][album_location[1]][1]
             location = self.findDevice(location)
             self.spotify_object.start_playback(device_id=location,uris=[track_id,track_id])
+            self.next()
+        # If user gives only location then start to play at location
+        elif key is None and location is not None:
+            self.spotify_object.start_playback(device_id = self.findDevice(location),uris = [((self.spotify_object.currently_playing())['item']['uri']),((self.spotify_object.currently_playing())['item']['uri'])])
+            self.next()
 
     # Pause playback
+    # If given device in normal name like desktop, iphone...
+    # Pause playback on current_playback or target device
     def pause(self,device=None):
         # See if user has premium
         if self.user == 'open' or self.user == 'free':
             return 'must have premium'
         # If user gives us no device then assume the current playing device
         elif device is None:
-            self.spotify_object.pause_playback(device_id = self.activeDevice())
+            self.spotify_object.pause_playback()
+        # If user gives us the device name then pause playback at that device
         elif device is not None:
-            self.spotify_object.pause_playback(device_id = device)
+            self.spotify_object.pause_playback(device_id = self.findDevice(device))
 
     # Go to next track
+    # If givin device
+    # Then go to next track on current_playback or target device
     def next(self,device=None):
+        # If device is None then go to next track on current playback
         if device is None:
             self.spotify_object.next_track()
+        # If deivce is given then play next track on device
         else:
-            self.spotify_object.next_track(device)
+            self.spotify_object.next_track(device_id = self.findDevice(device))
 
     # Go to previous track
+    # If givin device
+    # Then go to last track on current_playback or target device
     def last(self,device=None):
+        # If device is None then go to last song from current playback
         if device is None:
             self.spotify_object.previous_track()
+        # If deivce is given then go back to last track on device
         else:
-            self.spotify_object.previous_track(device_id=device)
+            self.spotify_object.previous_track(device_id = self.findDevice(device))
     
     # Repeat song
-    def rep(self,off=False,device=None):
-        if device is None:
+    # If givin device and/or repeat
+    # Then repeat will be turned on/off on current_playback or other device
+    def rep(self, off = False, device = None):
+        # If device is not given and off is False then repeat track
+        if device is None and off is False:
             self.spotify_object.repeat('track')
-        if not off:
+        # If off is not False then turn repeat off 
+        elif not off:
             self.spotify_object.repeat('off')
+        # If device is not None and off is False then turn repeat on at device
         else:
-            self.spotify_object.repeat('track',device_id=device)
+            self.spotify_object.repeat('track',device_id = self.findDevice(device))
