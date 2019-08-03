@@ -102,14 +102,13 @@ class remote:
 
     # Given the name of the device
     # Return the device ID of given name
-    def findDevice(self,device):
+    def findDevice(self,deviceName):
         devices = self.spotify_object.devices()
         if len(devices['devices']) > 0:
-            for x in range (0,len(devices)):
+            for device in devices['devices']:
                 # Add FuzzyWuzzy to make finding devices easy
-                if fuzz.token_sort_ratio(device,devices['devices'][x]['name']) > 50:
-                    return devices['devices'][x]['id']
-        
+                if fuzz.token_sort_ratio(deviceName,device['name']) > 50:
+                    return device['id']                
         else:
             print("No active devices found")
 
