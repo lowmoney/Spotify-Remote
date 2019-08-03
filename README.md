@@ -54,8 +54,8 @@ git clone https://github.com/lowmoney/Spotify-Remote.git
 ```
 
 ## How to Use
-
-First import class
+Copy over the remote.py file to your project
+Then import class
 ```
 from remote import remote
 ```
