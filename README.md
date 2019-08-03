@@ -22,7 +22,7 @@ remote.play('drive safe')
 remote.play('drivesafe')
 remote.play('drvie safe')
 ```
-Remote will still play 'Drive Safe' by Rich Brian
+Remote will still play 'Drive Safe' by Rich Brian,
 Remote uses fuzzywuzzy for the track search to make this possible
 
 IMPORTANT NOTE(S)
